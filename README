@@ -1,0 +1,22 @@
+===============================================================================
+                                     Asteroids
+                                   Duncan Tilley
+===============================================================================
+
+1. Basic info
+A clone of the old asteroids game using slightly more modern graphics. The
+graphics are implemented using native Java libraries and also include a very
+primitive particle system.
+
+2. Build project
+Make sure that you have make installed as well as a version of JDK (JDK-6
+should be fine, however this project was tested with JDK-8). Execute the
+following commands to build and run:
+
+git clone https://github.com/Paradime987/asteroids.git
+cd asteroids
+mkdir out
+make
+make exec
+
+===============================================================================
