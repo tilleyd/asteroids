@@ -4,11 +4,12 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.awt.image.BufferStrategy;
 import java.util.LinkedList;
 
 /* This is where all the magic happens. */
 
-public class GamePanel extends JPanel implements Runnable {
+public class GameLogic extends KeyAdapter implements Runnable {
 
 	private final int FPS = 144;
 	private final int PERIOD_NS = 1000000000 / FPS;
@@ -20,8 +21,9 @@ public class GamePanel extends JPanel implements Runnable {
 
 	private int width;
 	private int height;
-	private volatile BufferedImage dbImage;
-	private Graphics2D dbg;
+	private JFrame parent;
+	private BufferStrategy bufferStrat;
+	private Graphics2D g;
 	private Thread gameThread;
 	private Font medFont;
 	private Font largeFont;
@@ -46,31 +48,19 @@ public class GamePanel extends JPanel implements Runnable {
 	private LinkedList<Particle> particles;
 	private LinkedList<Particle> stars;
 
-	public GamePanel() {
-		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
-		width = screen.width;
-		height = screen.height;
-		setPreferredSize(screen);
-		setFocusable(true);
-		requestFocus();
-		addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyPressed(KeyEvent evt) {
-				keyPress(evt);
-			}
-			@Override
-			public void keyReleased(KeyEvent evt) {
-				keyRelease(evt);
-			}
-		});
+	public GameLogic(JFrame par, BufferStrategy buff, int w, int h) {
+		parent = par;
+		bufferStrat = buff;
+		width = w;
+		height = h;
 		medFont = new Font("Arial", Font.BOLD, 32);
-		medMetrics = getFontMetrics(medFont);
+		medMetrics = parent.getFontMetrics(medFont);
 		largeFont = new Font("Arial", Font.BOLD, 72);
-		largeMetrics = getFontMetrics(largeFont);
+		largeMetrics = parent.getFontMetrics(largeFont);
 		running = false;
 	}
 
-	private void startGame() {
+	public void startGame() {
 		if (!running || gameThread == null) {
 			gameThread = new Thread(this);
 		}
@@ -154,12 +144,6 @@ public class GamePanel extends JPanel implements Runnable {
 	}
 
 	@Override
-	public void addNotify() {
-		super.addNotify();
-		startGame();
-	}
-
-	@Override
 	public void run() {
 		running = true;
 		long startTime = System.nanoTime();
@@ -170,7 +154,6 @@ public class GamePanel extends JPanel implements Runnable {
 		int framesSkipped;
 		while (running) {
 			update();
-			buffer();
 			draw();
 			afterTime = System.nanoTime();
 			sleepTime = PERIOD_NS - (afterTime - startTime) - oversleep;
@@ -323,64 +306,66 @@ public class GamePanel extends JPanel implements Runnable {
 		}
 	}
 
-	private void buffer() {
-		if (dbImage == null) {
-			GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-			GraphicsConfiguration gc = ge.getDefaultScreenDevice().getDefaultConfiguration();
-			dbImage = gc.createCompatibleImage(width, height);
-			if (dbImage == null) {
-				System.out.println("Error creating image");
-				System.exit(0);
-			}
-			dbg = (Graphics2D)dbImage.getGraphics();
-			dbg.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		}
+	private void buffer(Graphics2D g) {
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		// draw background
-		dbg.setColor(new Color(23, 12, 26));
-		dbg.fillRect(0, 0, width, height);
+		g.setColor(new Color(23, 12, 26));
+		g.fillRect(0, 0, width, height);
 		// draw entities
 		for (Particle star : stars) {
-			star.draw(dbg);
+			star.draw(g);
 		}
 		for (Bullet bullet : bullets) {
-			bullet.draw(dbg);
+			bullet.draw(g);
 		}
 		for (Asteroid asteroid : asteroids) {
-			asteroid.draw(dbg);
+			asteroid.draw(g);
 		}
 		if (!gameOver) {
-			player.draw(dbg);
+			player.draw(g);
 		}
 		for (Particle particle : particles) {
-			particle.draw(dbg);
+			particle.draw(g);
 		}
 		if (!gameOver) {
-			dbg.setFont(medFont);
-			dbg.setColor(new Color(178, 163, 255));
-			dbg.drawString("Score: " + score, 10, medMetrics.getHeight());
-			dbg.drawString("Lives: " + lives, 10, medMetrics.getHeight() * 2);
-			dbg.drawString("Level: " + level, 10, medMetrics.getHeight() * 3);
+			g.setFont(medFont);
+			g.setColor(new Color(178, 163, 255));
+			g.drawString("Score: " + score, 10, medMetrics.getHeight());
+			g.drawString("Lives: " + lives, 10, medMetrics.getHeight() * 2);
+			g.drawString("Level: " + level, 10, medMetrics.getHeight() * 3);
 		} else {
-			Rectangle2D textBound1 = largeMetrics.getStringBounds("Game Over", dbg);
-			Rectangle2D textBound2 = medMetrics.getStringBounds("Score: " + score, dbg);
-			Rectangle2D textBound3 = medMetrics.getStringBounds("Level: " + level, dbg);
-			dbg.setFont(largeFont);
-			dbg.setColor(new Color(178, 163, 255));
-			dbg.drawString("Game Over", (int)(width / 2 - textBound1.getWidth() / 2), height / 2);
-			dbg.setFont(medFont);
-			dbg.drawString("Score: " + score, (int)(width / 2 - textBound2.getWidth() / 2),
+			Rectangle2D textBound1 = largeMetrics.getStringBounds("Game Over", g);
+			Rectangle2D textBound2 = medMetrics.getStringBounds("Score: " + score, g);
+			Rectangle2D textBound3 = medMetrics.getStringBounds("Level: " + level, g);
+			g.setFont(largeFont);
+			g.setColor(new Color(178, 163, 255));
+			g.drawString("Game Over", (int)(width / 2 - textBound1.getWidth() / 2), height / 2);
+			g.setFont(medFont);
+			g.drawString("Score: " + score, (int)(width / 2 - textBound2.getWidth() / 2),
 					(int)(height / 2 + textBound1.getHeight()));
-			dbg.drawString("Level: " + level, (int)(width / 2 - textBound3.getWidth() / 2),
+			g.drawString("Level: " + level, (int)(width / 2 - textBound3.getWidth() / 2),
 					(int)(height / 2 + textBound1.getHeight() + textBound2.getHeight()));
 		}
 	}
 
 	private void draw() {
-		Graphics g = getGraphics();
-		g.drawImage(dbImage, 0, 0, null);
+		try {
+			g = (Graphics2D)bufferStrat.getDrawGraphics();
+			buffer(g);
+			g.dispose();
+			if (!bufferStrat.contentsLost()) {
+				bufferStrat.show();
+			} else {
+				System.out.println("Warning: graphics buffer contents lost.");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			running = false;
+		}
 	}
 
-	private void keyPress(KeyEvent evt) {
+	@Override
+	public void keyPressed(KeyEvent evt) {
 		if (evt.getKeyCode() == KeyEvent.VK_RIGHT) {
 			rightPressed = true;
 		} else if (evt.getKeyCode() == KeyEvent.VK_UP) {
@@ -396,7 +381,8 @@ public class GamePanel extends JPanel implements Runnable {
 		}
 	}
 
-	private void keyRelease(KeyEvent evt) {
+	@Override
+	public void keyReleased(KeyEvent evt) {
 		if (evt.getKeyCode() == KeyEvent.VK_RIGHT) {
 			rightPressed = false;
 		} else if (evt.getKeyCode() == KeyEvent.VK_UP) {
