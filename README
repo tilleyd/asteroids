@@ -6,7 +6,8 @@
 1. Basic info
 A clone of the old asteroids game using slightly more modern graphics. The
 graphics are implemented using native Java libraries and also include a very
-primitive particle system.
+primitive particle system. It also features an exclusive fullscreen port
+using the BufferStrategy object.
 
 2. Build project
 Make sure that you have make installed as well as a version of JDK (JDK-6
