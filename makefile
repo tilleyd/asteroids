@@ -5,7 +5,7 @@
 # -> make exec
 
 objects = src/Asteroid.java src/Bullet.java src/Entity.java src/GameFrame.java src/GameLogic.java \
-		src/Main.java src/Particle.java src/Player.java
+		src/GameSounds.java src/Main.java src/Particle.java src/Player.java
 
 all: $(objects)
 	javac $(objects) -d out/

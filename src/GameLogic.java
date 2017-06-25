@@ -29,6 +29,7 @@ public class GameLogic extends KeyAdapter implements Runnable {
 	private Font largeFont;
 	private FontMetrics medMetrics;
 	private FontMetrics largeMetrics;
+	private GameSounds sounds;
 
 	// game variables
 	private final double BULLET_DELAY = 0.2;
@@ -74,12 +75,15 @@ public class GameLogic extends KeyAdapter implements Runnable {
 		asteroids = new LinkedList<>();
 		particles = new LinkedList<>();
 		stars = new LinkedList<>();
+		// TODO add loading screen for sounds
+		sounds = new GameSounds();
 		level = 1;
 		lives = START_LIVES;
 		score = 0;
 		bulletTime = BULLET_DELAY;
 		populateAsteroids();
 		createStars();
+		sounds.playSound(GameSounds.SOUND_MUSIC, true);
 		gameThread.start();
 	}
 
@@ -140,6 +144,7 @@ public class GameLogic extends KeyAdapter implements Runnable {
 	}
 
 	public void stopGame() {
+		sounds.stop();
 		running = false;
 	}
 
@@ -229,6 +234,7 @@ public class GameLogic extends KeyAdapter implements Runnable {
 				}
 				if (spacePressed && bulletTime <= 0.0) {
 					bullets.add(new Bullet(player));
+					sounds.playSound(GameSounds.SOUND_LASER, false);
 					bulletTime = BULLET_DELAY;
 				} else if (!spacePressed) {
 					bulletTime = 0.0;
@@ -243,6 +249,7 @@ public class GameLogic extends KeyAdapter implements Runnable {
 							createExplosion(bullet.getX(), bullet.getY(), Bullet.COLOR);
 							createExplosion(asteroid.getX() + asteroid.getWidth() / 2,
 									asteroid.getY() + asteroid.getHeight() / 2, Asteroid.COLOR);
+							sounds.playSound(GameSounds.SOUND_ASTEROID, false);
 							if (asteroid.getSize() != Asteroid.SMALL) {
 								asteroids.add(new Asteroid(asteroid));
 								asteroids.add(new Asteroid(asteroid));
@@ -268,6 +275,7 @@ public class GameLogic extends KeyAdapter implements Runnable {
 								createExplosion(xPoints[j], yPoints[j], Player.COLOR);
 								createExplosion(asteroid.getX() + asteroid.getWidth() / 2,
 										asteroid.getY() + asteroid.getHeight() / 2, Asteroid.COLOR);
+								sounds.playSound(GameSounds.SOUND_COLLISION, false);
 							}
 							j++;
 						}
