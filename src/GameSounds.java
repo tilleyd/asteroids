@@ -45,6 +45,7 @@ public class GameSounds {
 	public void playSound(String sound, boolean loop) {
 		AudioClip clip = sounds.get(sound);
 		if (clip != null) {
+			clip.stop();
 			if (loop) {
 				clip.loop();
 			} else {
