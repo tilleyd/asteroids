@@ -75,7 +75,7 @@ public class GameLogic extends KeyAdapter implements Runnable {
 		asteroids = new LinkedList<>();
 		particles = new LinkedList<>();
 		stars = new LinkedList<>();
-		// TODO add loading screen for sounds
+		drawLoading();
 		sounds = new GameSounds();
 		level = 1;
 		lives = START_LIVES;
@@ -353,6 +353,28 @@ public class GameLogic extends KeyAdapter implements Runnable {
 					(int)(height / 2 + textBound1.getHeight()));
 			g.drawString("Level: " + level, (int)(width / 2 - textBound3.getWidth() / 2),
 					(int)(height / 2 + textBound1.getHeight() + textBound2.getHeight()));
+		}
+	}
+
+	private void drawLoading() {
+		try {
+			g = (Graphics2D)bufferStrat.getDrawGraphics();
+			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			g.setColor(new Color(23, 12, 26));
+			g.fillRect(0, 0, width, height);
+			// draw loading message
+			Rectangle2D bound = medMetrics.getStringBounds("Loading sounds...", g);
+			g.setFont(medFont);
+			g.setColor(new Color(178, 163, 255));
+			g.drawString("Loading sounds...", (int)(width / 2 - bound.getWidth() / 2), height / 2);
+			g.dispose();
+			if (!bufferStrat.contentsLost()) {
+				bufferStrat.show();
+			} else {
+				System.out.println("Warning: graphics buffer contents lost.");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 
